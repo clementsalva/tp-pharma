@@ -12,8 +12,9 @@ export class Medicament {
         this._imageURL = medicamentJSON.imageURL ?? ""
         this._links = medicamentJSON._links ?? {}
         this._categorieURL = medicamentJSON._links?.categorie?.href ?? ""
-        this._categorieLibelle = ""
-
+        this._categorie = ""
+        this._description = ""
+        this.isEditing = false
     }
 
     get reference() { return this._reference }
@@ -28,15 +29,14 @@ export class Medicament {
     get indisponible() { return this._indisponible }
     get imageURL() { return this._imageURL }
     get links() { return this._links }
-    get categorieURL() { return this._links?.categorie?.href ?? "" }
-    get categorieLibelle() { return this._categorieLibelle }
-    async chargerCategorie() {
-        if (!this._categorieURL) return
-
-        const response = await fetch(this._categorieURL)
-        const data = await response.json()
-        this._categorieLibelle = data.libelle
-    }
+    get categorieURL() { return this._categorieURL }
+    get categorie() { return this._categorie }
+    set categorie(val) { this._categorie = val }
+    get description() { return this._description }
+    set description(val) { this._description = val }
+    set nom(val) { this._nom = val }
+    set prixUnitaire(val) { this._prixUnitaire = val }
+    set quantiteParUnite(val) { this._quantiteParUnite = val }
 
     toString() {
         return `--> ${this._nom} (${this._quantiteParUnite}) - ${this._prixUnitaire}€ | Stock: ${this._unitesEnStock}`
