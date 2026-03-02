@@ -1,11 +1,17 @@
 <script setup>
-import { ref, onMounted, reactive, watch } from 'vue'
+import { ref, onMounted, reactive, watch, computed } from 'vue'
 import { Medicament } from '../Medicament.js'
 
-const urlBase = 'https://springajax.herokuapp.com/api/medicaments'
+const urlBase = 'https://occupational-bess-clementsalva-f82c3d12.koyeb.app/api/medicaments'
 const listeMed = reactive([]);
+const recherche = ref("")
 
 const props = defineProps({ idCat: String, refreshKey: Number })
+
+const listeMedFiltre = computed(() => {
+    if (!recherche.value) return listeMed
+    return listeMed.filter(m => m.nom.toLowerCase().includes(recherche.value.toLowerCase()))
+})
 
 async function getMedicaments(url = urlBase) {
     const response = await fetch(`${url}?size=200`)
@@ -67,7 +73,7 @@ async function moins(med) {
 
 watch(() => props.idCat, (nouvelId) => {
     const url = nouvelId
-        ? `https://springajax.herokuapp.com/api/categories/${nouvelId}/medicaments`
+        ? `https://occupational-bess-clementsalva-f82c3d12.koyeb.app/api/categories/${nouvelId}/medicaments`
         : urlBase
     getMedicaments(url)
 })
@@ -82,211 +88,82 @@ onMounted(() => {
 </script>
 
 <template>
-    <h1>Liste des médicaments</h1>
-    <div class="container">
-        <div v-for="med in listeMed" :key="med.reference" class="card">
-            <div class="medic-header">
-                <input v-if="med.isEditing" v-model="med._nom" class="edit-input-title" />
-                <h2 v-else>{{ med.nom }}</h2>
-            </div>
+    <v-container fluid>
+        <v-row>
+            <v-col v-for="med in listeMedFiltre" :key="med.reference" cols="3">
+                <v-card rounded="lg" elevation="2" class="card">
+                    <v-text-field v-if="med.isEditing" v-model="med._nom" variant="underlined" class="px-4 pt-2" />
+                    <v-card-title v-else class="card-title">{{ med.nom }}</v-card-title>
 
-            <img :src="med.imageURL" :alt="med.nom" class="card-image" />
-            <div class="info">
-                <div v-if="med.isEditing">
-                    <label>Format :</label>
-                    <input v-model="med._quantiteParUnite" class="edit-input" />
-                    <label>Prix (€) :</label>
-                    <input v-model="med._prixUnitaire" type="number" step="0.01" class="edit-input" />
-                </div>
-                <div v-else>
-                    <p>Catégorie : {{ med.categorie || '...' }}</p>
-                    <p>Description : {{ med.description || '...' }}</p>
-                    <p>Quantité par unité : {{ med.quantiteParUnite }}</p>
-                    <p>Prix unitaire : {{ med.prixUnitaire }}€</p>
-                    <p>Quantité en stock : {{ med.unitesEnStock }}</p>
-                </div>
-                <div class="stock-button">
-                    <button @click="moins(med)">-</button>
-                    <span class="valeur-stock">{{ med.unitesEnStock }}</span>
-                    <button @click="plus(med)">+</button>
-                </div>
-            </div>
+                    <v-img :src="med.imageURL" :alt="med.nom" height="250" cover />
 
-            <div class="buttons">
-                <button v-if="!med.isEditing" @click="supprimer(med)">Supprimer</button>
-                <button v-if="!med.isEditing" @click="modifier(med)">Modifier</button>
-                <button v-else @click="enregistrer(med)">Enregistrer</button>
-            </div>
-        </div>
-    </div>
+                    <div class="stock-button">
+                        <button @click="moins(med)">-</button>
+                        <span class="valeur-stock">{{ med.unitesEnStock }}</span>
+                        <button @click="plus(med)">+</button>
+                    </div>
+
+                    <v-card-text>
+                        <div v-if="med.isEditing">
+                            <label>Format :</label>
+                            <v-text-field v-model="med._quantiteParUnite" variant="outlined" density="compact" />
+                            <label>Prix (€) :</label>
+                            <v-text-field v-model="med._prixUnitaire" type="number" variant="outlined"
+                                density="compact" />
+                        </div>
+                        <div v-else>
+                            <h4>{{ med.categorie || '...' }}</h4>
+                            <p>{{ med.description || '...' }}</p>
+                            <p>{{ med.quantiteParUnite }}</p>
+                            <p>{{ med.prixUnitaire }}€ l'unité</p>
+                        </div>
+                    </v-card-text>
+
+                    <v-card-actions class="justify-center">
+                        <v-btn v-if="!med.isEditing" color="#ff6b6b" variant="flat"
+                            @click="supprimer(med)">Supprimer</v-btn>
+                        <v-btn v-if="!med.isEditing" color="#f4a261" variant="flat"
+                            @click="modifier(med)">Modifier</v-btn>
+                        <v-btn v-else color="#51cf66" variant="flat" @click="enregistrer(med)">Enregistrer</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-col>
+        </v-row>
+    </v-container>
 </template>
 
-<style scoped>
+<style>
 body {
     background-color: #e6ffe6;
-    /* vert très clair */
     margin: 0;
     font-family: Arial, sans-serif;
 }
 
-/* ===== HEADER ===== */
-.header {
-    background-color: rgb(0, 255, 0);
-    /* vert vif */
-    color: white;
-    padding: 20px;
-    font-size: 24px;
-    font-weight: bold;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.header h1 {
-    margin: 0 0 10px 0;
-}
-
-.header-controls {
-    display: flex;
-    gap: 10px;
-    width: 100%;
-    max-width: 800px;
-}
-
-.search-bar {
-    flex: 2;
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: none;
-    font-size: 16px;
-}
-
-.filter {
-    flex: 1;
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: none;
-    font-size: 16px;
-}
-
-/* ===== GLOBAL BUTTON FIX ===== */
-button {
-    outline: none;
-    border: none;
-}
-
-button:focus {
-    outline: none;
-    box-shadow: none;
-}
-
-/* ===== CONTAINER (4 CARTES PAR LIGNE) ===== */
-.container {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 30px;
-    padding: 20px;
-}
-
-/* ===== CARD ===== */
 .card {
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    background-color: white;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    min-height: 350px;
 }
 
 .card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
 
-.card h2 {
-    padding: 15px;
-    margin: 0;
+.card-title {
+    padding: 10px 16px;
+    font-size: 1.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* ===== IMAGE ===== */
-.card-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    display: block;
-}
-
-/* ===== INFO ===== */
-.info {
-    padding: 15px;
-}
-
-.info p {
-    margin: 5px 0;
-}
-
-/* ===== BOUTONS ACTION ===== */
-.buttons {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    padding: 15px;
-}
-
-.buttons button {
-    padding: 8px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: 0.2s;
-    border: none;
-    color: white;
-    font-size: 14px;
-}
-
-/* Modifier */
-.buttons button:nth-child(2) {
-    background-color: #f4a261;
-    /* orange doux */
-}
-
-.buttons button:nth-child(2):hover {
-    background-color: #e76f51;
-}
-
-/* Supprimer */
-.buttons button:nth-child(1) {
-    background-color: #ff6b6b;
-    /* rouge clair */
-}
-
-.buttons button:nth-child(1):hover {
-    background-color: #e63946;
-}
-
-/* Enregistrer */
-.buttons button:nth-child(3) {
-    background-color: #51cf66;
-    /* vert clair */
-}
-
-.buttons button:nth-child(3):hover {
-    background-color: #2b8a3e;
-}
-
-/* ===== STOCK BUTTON ===== */
 .stock-button {
-    display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin: 15px auto 20px;
+    margin: 10px auto;
     border-radius: 30px;
     overflow: hidden;
     background-color: #6c757d;
-    /* gris */
+    width: fit-content;
+    display: flex;
 }
 
 .stock-button button {
@@ -308,25 +185,5 @@ button:focus {
     font-weight: bold;
     padding: 8px 20px;
     font-size: 16px;
-}
-
-/* ===== EDIT INPUT ===== */
-.edit-input-title {
-    width: 100%;
-    padding: 10px 15px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    border: none;
-    border-bottom: 2px solid #007bff;
-    outline: none;
-}
-
-.edit-input {
-    width: 100%;
-    padding: 4px;
-    margin-top: 4px;
-    margin-bottom: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
 }
 </style>
