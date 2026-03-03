@@ -27,7 +27,7 @@ watch(searchText, (val) => {
 </script>
 
 <template>
-    <v-card flat rounded="lg" elevation="2" class="ma-5 pa-3">
+    <v-card flat rounded="lg" elevation="2" class="ma-5 pa-3" style="position: sticky; top: 70px; z-index: 100;">
         <v-row align="center" justify="space-between">
             <v-col cols="auto">
                 <v-text-field v-model="searchText" placeholder="Rechercher..." variant="outlined" density="compact"
@@ -43,7 +43,7 @@ watch(searchText, (val) => {
             <v-col cols="auto">
                 <v-select v-model="selectedCat" :items="listeCategorie" item-title="nom" item-value="id"
                     placeholder="Toutes les catégories" variant="outlined" density="compact" hide-details
-                    style="min-width: 250px;" @update:modelValue="envoyerChoix" />
+                    style="min-width: 250px;" @update:modelValue="envoyerChoix" clearable />
             </v-col>
         </v-row>
     </v-card>

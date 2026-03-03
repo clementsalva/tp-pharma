@@ -26,11 +26,11 @@ onMounted(() => {
 function ajouter() {
     emit('medicamentAjoute', {
         nom: nom.value,
-        fournisseur: fournisseur.value,
+        fournisseur: fournisseur.value || '',
         imageURL: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400",
         unitesEnStock: parseInt(unitesEnStock.value) || 0,
         prixUnitaire: parseFloat(prixUnitaire.value) || 0,
-        quantiteParUnite: quantiteParUnite.value,
+        quantiteParUnite: quantiteParUnite.value || '',
         idCategorie: selectedCat.value,
         indisponible: indisponible.value
     })

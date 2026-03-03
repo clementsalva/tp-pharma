@@ -4,13 +4,12 @@ import { Medicament } from '../Medicament.js'
 
 const urlBase = 'https://occupational-bess-clementsalva-f82c3d12.koyeb.app/api/medicaments'
 const listeMed = reactive([]);
-const recherche = ref("")
 
-const props = defineProps({ idCat: String, refreshKey: Number })
+const props = defineProps({ idCat: String, refreshKey: Number, searchText: String })
 
 const listeMedFiltre = computed(() => {
-    if (!recherche.value) return listeMed
-    return listeMed.filter(m => m.nom.toLowerCase().includes(recherche.value.toLowerCase()))
+    if (!props.searchText) return listeMed
+    return listeMed.filter(m => m.nom.toLowerCase().includes(props.searchText.toLowerCase()))
 })
 
 async function getMedicaments(url = urlBase) {
@@ -30,7 +29,16 @@ async function getMedicaments(url = urlBase) {
 }
 
 function modifier(med) {
+    if (!med.isEditing) {
+        med._nom = med.nom
+        med._quantiteParUnite = med.quantiteParUnite
+        med._prixUnitaire = med.prixUnitaire
+    }
     med.isEditing = !med.isEditing
+}
+
+function annuler(med) {
+    med.isEditing = false
 }
 
 async function enregistrer(med) {
@@ -38,11 +46,14 @@ async function enregistrer(med) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            nom: med.nom,
-            prixUnitaire: med.prixUnitaire,
-            quantiteParUnite: med.quantiteParUnite
+            nom: med._nom,
+            prixUnitaire: med._prixUnitaire,
+            quantiteParUnite: med._quantiteParUnite
         })
     })
+    med.nom = med._nom
+    med.prixUnitaire = med._prixUnitaire
+    med.quantiteParUnite = med._quantiteParUnite
     med.isEditing = false
 }
 
@@ -124,7 +135,10 @@ onMounted(() => {
                             @click="supprimer(med)">Supprimer</v-btn>
                         <v-btn v-if="!med.isEditing" color="#f4a261" variant="flat"
                             @click="modifier(med)">Modifier</v-btn>
-                        <v-btn v-else color="#51cf66" variant="flat" @click="enregistrer(med)">Enregistrer</v-btn>
+                        <template v-else>
+                            <v-btn color="#51cf66" variant="flat" @click="enregistrer(med)">Enregistrer</v-btn>
+                            <v-btn color="#adb5bd" variant="flat" @click="annuler(med)">Annuler</v-btn>
+                        </template>
                     </v-card-actions>
                 </v-card>
             </v-col>
