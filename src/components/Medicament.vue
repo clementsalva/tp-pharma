@@ -155,6 +155,7 @@ body {
 
 .card {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    height: 100%;
 }
 
 .card:hover {
